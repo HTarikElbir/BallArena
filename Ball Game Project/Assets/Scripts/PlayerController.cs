@@ -1,11 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
+using UnityEngine.SceneManagement;
 
 
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private GameObject effect;
+    [SerializeField] private AudioSource hit;
 
     private Rigidbody playerRb;
     private GameObject focalPoint;
@@ -14,6 +17,8 @@ public class PlayerController : MonoBehaviour
     private float powerupStrength = 15.0f;
     public GameObject powerupIndicator;
     private float newYPos = -0.5f;
+    private float originalTimeScale;
+   
     
     
   
@@ -22,7 +27,7 @@ public class PlayerController : MonoBehaviour
     {
         playerRb = GetComponent<Rigidbody>();
         focalPoint = GameObject.Find("Focal Point");
-       
+        originalTimeScale = Time.timeScale;
     }
 
     // Update is called once per frame
@@ -31,6 +36,13 @@ public class PlayerController : MonoBehaviour
         float forwardInput = Input.GetAxis("Vertical");
         playerRb.AddForce(focalPoint.transform.forward * forwardInput * speed *-1);
         powerupIndicator.transform.position = transform.position + new Vector3(0,newYPos, 0);
+        if (transform.position.y < -5)
+        {
+            Instantiate(effect, transform.position, transform.rotation);
+            SceneManager.LoadScene("GameOverScene");
+
+        }
+       
     }
     private void OnTriggerEnter(Collider other)
     {
@@ -53,11 +65,21 @@ public class PlayerController : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Enemy") && hasPowerup)
         {
+            hit.Play();
             Rigidbody enemyRb = collision.gameObject.GetComponent<Rigidbody>();
             Vector3 awayFromPlayer = collision.gameObject.transform.position - transform.position;
             Instantiate(effect, transform.position, transform.rotation);
             enemyRb.AddForce(awayFromPlayer * powerupStrength, ForceMode.Impulse);
             Debug.Log("Collided with" + collision.gameObject.name + "with powerup set to" + hasPowerup);
+        }else if (collision.gameObject.CompareTag("Enemy"))
+        {
+            hit.Play();
         }
+    }
+
+    void PauseScene() 
+    {
+        //pauseText.gameObject.SetActive(true);
+
     }
 }
